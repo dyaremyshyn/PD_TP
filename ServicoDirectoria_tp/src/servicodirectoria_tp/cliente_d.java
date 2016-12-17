@@ -10,10 +10,10 @@ package servicodirectoria_tp;
  * @author Sergio
  */
 public class cliente_d {
-    String IP;
-    String port;
-    String nome_servidor;
-    String nome_cliente;
+    private String IP;
+    private String port;
+    private String nome_servidor;
+    private String nome_cliente;
 
     public cliente_d(String IP, String port, String nome_servidor, String nome_cliente) {
         this.IP = IP;

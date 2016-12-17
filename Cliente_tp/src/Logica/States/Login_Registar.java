@@ -18,5 +18,24 @@ public class Login_Registar extends StateAdapter
     {
         super(cd);
     }
+
+    @Override
+    public IStates Register(String nome, String pass) {
+      
+      getCliente().registar(nome, pass);
+        
+      return this;
+    }
+
+    @Override
+    public IStates Login(String nome, String pass) {
+      
+        if(getCliente().login(nome, pass))
+        return new Comandos(getCliente());
+        
+        return this;
+    }
+    
+    
     
 }

@@ -5,15 +5,19 @@
  */
 package Logica;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -38,7 +42,12 @@ public class ClienteDados {
     
     
     //TCP constantes
+    public static final String REQUEST_LOGIN = "LOGIN";
+    public static final String REQUEST_REGISTAR = "REGISTAR";
+    //add outros requests necessarios NOTA add aqui e no servidor....
     
+    
+    Socket TCPserv_socket ;
     
     
     //variaveis de dados respectivos a dirtectoria UDP e vars para a partilha de dados
@@ -102,7 +111,7 @@ public class ClienteDados {
     
     //funções para estabelecer ligação com o servidor
     
-    public boolean estabelece_ligacao_servidor(int pos){ //por implementar por receber argumentos , depende de como se esta a pensar passar os dados
+    public boolean estabelece_ligacao_servidor(int pos) throws IOException{ //por implementar por receber argumentos , depende de como se esta a pensar passar os dados
     
         if(pos < lista_servidores.size() && pos >= 0){
         //estabelece ligacao
@@ -113,7 +122,12 @@ public class ClienteDados {
                    String port = dados_servidor[2];
                    
                    //estabelece ligação
-                    System.out.println("[LIGACAO]: "+ nome_grupo + " ip:"+ ip + " port:"+ port+"\n");   
+                    System.out.println("[LIGACAO]: "+ nome_grupo + " ip:"+ ip + " port:"+ port+"\n");  
+                    
+                    TCPserv_socket = new Socket(ip, 6000);
+                    TCPserv_socket.setSoTimeout(5000); //ms
+                    System.out.println("Connection established");
+                    
                    //add ao grupo multicast(nao sei se sera aqui ou no serviço directoria)
         return true;
         }
@@ -121,8 +135,9 @@ public class ClienteDados {
     return false;
     }
     
-    
-    public String pedido_lista_servidores() throws IOException, ClassNotFoundException {
+    //funções de acçôes
+    //para UDP 
+     public String pedido_lista_servidores() throws IOException, ClassNotFoundException {
         ObjectOutputStream out=null;
         String Lista="lista: \n";
      
@@ -174,10 +189,100 @@ public class ClienteDados {
         return Lista;
     }
     
+    //para TCP
+     //parte LOGIN_REGISTAR
+    public boolean login(String nome , String pass){
     
+        String nomeEpass = nome +" "+pass;
+        String resposta;
+        BufferedReader in;
+        PrintWriter out;
+        
+         if(nomeEpass == null){     
+                return false;
+            }
+        
+        try{
+            
+             System.out.println("[CLIENTE_login] introduzi "+ nome +" "+ pass);  
+            
+            out = new PrintWriter(TCPserv_socket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(TCPserv_socket.getInputStream()));
     
+            out.println(REQUEST_LOGIN);
+            out.flush();
+                          
+            System.out.println("[CLIENTE_login] enviei request");                           
+                            
+             out.println(nomeEpass);
+             out.flush();   
+               
+            // System.out.println("[CLIENTE] enviei info nome e pass"); 
+               
+           
+
+                //recebe resposta
+              resposta = in.readLine();
+               
+                if(resposta.equals("true"))
+                    return true;
+            
+
+        }catch(IOException e){
+            System.out.println(" Erro na comunicação como o cliente ");
+            return false;
+        }
+            
+    return false;
+    }
     
-    //funções de acçôes
+    public boolean registar(String nome , String pass){
+    
+        String nomeEpass = nome +" "+pass;
+        String resposta;
+        BufferedReader in;
+        PrintWriter out;
+        
+         if(nomeEpass == null){     
+                return false;
+            }
+        
+        try{
+            
+             System.out.println("[CLIENTE_registar] introduzi "+ nome +" "+ pass);  
+            
+            out = new PrintWriter(TCPserv_socket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(TCPserv_socket.getInputStream()));
+    
+            out.println(REQUEST_REGISTAR); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+                          
+            System.out.println("[CLIENTE_registar] enviei request");                           
+                            
+             out.println(nomeEpass);
+             out.flush();   
+               
+             //System.out.println("[CLIENTE_registar] enviei info nome e pass"); 
+               
+           
+
+                //recebe resposta
+              resposta = in.readLine();
+               
+                if(resposta.equals("true"))
+                    return true;
+            
+
+        }catch(IOException e){
+            System.out.println(" Erro na comunicação como o cliente ");
+            return false;
+        }
+            
+    return false;
+    
+    }
+     
+    //parte COMANDOS
     public boolean Criar_Copia(char ficheiro, char localizacao, String fich, String local) {  // r para remoto , l para local
 
         if (ficheiro == 'r') { //ficheiro remoto

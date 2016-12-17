@@ -15,9 +15,9 @@ public class servidor implements Serializable {
     
     String nome;
     String IP;
-    String Port;
+    int Port;
 
-    public servidor(String nome, String IP, String Port) {
+    public servidor(String nome, String IP, int Port) {
         this.nome = nome;
         this.IP = IP;
         this.Port = Port;
@@ -41,11 +41,11 @@ public class servidor implements Serializable {
         this.IP = IP;
     }
 
-    public String getPort() {
+    public int getPort() {
         return Port;
     }
 
-    public void setPort(String Port) {
+    public void setPort(int Port) {
         this.Port = Port;
     }
     

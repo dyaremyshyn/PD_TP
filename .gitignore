@@ -17,3 +17,9 @@ hs_err_pid*
 /Cliente_tp/build
 /Cliente_tp/dist/
 /Servidor_tp/nbproject/private/
+/RMIGetRemoteFile/nbproject/private/
+/rmi_getfile/nbproject/private/
+/rmi_getfile/build/
+/rmi_getfile/dist/
+/Servidor_tp/build/
+/Servidor_tp/dist/
