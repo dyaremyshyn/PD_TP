@@ -16,11 +16,13 @@ public class servidor implements Serializable {
     String nome;
     String IP;
     int Port;
+    long lastHeartbeat;
 
     public servidor(String nome, String IP, int Port) {
         this.nome = nome;
         this.IP = IP;
         this.Port = Port;
+        updateHeartbeat();
     }
     
     //get's set's
@@ -48,6 +50,17 @@ public class servidor implements Serializable {
     public void setPort(int Port) {
         this.Port = Port;
     }
+    
+     //heartbeat
+    public void updateHeartbeat() {
+		lastHeartbeat=System.currentTimeMillis();
+	}
+	
+	public long getLastHeartbeat() {
+		return lastHeartbeat;
+	}
+        
+     
     
     @Override
     public String toString(){

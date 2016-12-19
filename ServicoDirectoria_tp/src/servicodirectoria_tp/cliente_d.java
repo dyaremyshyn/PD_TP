@@ -10,16 +10,20 @@ package servicodirectoria_tp;
  * @author Sergio
  */
 public class cliente_d {
+    
     private String IP;
     private String port;
     private String nome_servidor;
     private String nome_cliente;
+    long lastHeartbeat;
 
     public cliente_d(String IP, String port, String nome_servidor, String nome_cliente) {
         this.IP = IP;
         this.port = port;
         this.nome_servidor = nome_servidor;
         this.nome_cliente = nome_cliente;
+        
+       updateHeartbeat();
     }
 
     public String getIP() {
@@ -54,7 +58,19 @@ public class cliente_d {
         this.nome_cliente = nome_cliente;
     }
     
-    
+    //heartbeat
+    public void updateHeartbeat() {
+		lastHeartbeat=System.currentTimeMillis();
+	}
+	
+	public long getLastHeartbeat() {
+		return lastHeartbeat;
+	}
+        
+        @Override
+	public String toString() {
+		return nome_cliente;
+	}
     
     
 }

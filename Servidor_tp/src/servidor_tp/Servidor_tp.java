@@ -7,6 +7,8 @@ package servidor_tp;
  import java.util.*;
 import java.net.*;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -195,22 +197,33 @@ public class Servidor_tp {
     
     //UDP serviço de directoria
     public static final String REQUEST_VALIDACAONOME = "VALIDACAO";
+    public static final String REQUEST_ADDUPDATESERVIDOR = "UPDATESERVERLIST"; //heartbeat
+    public final static long SERVERSIGNAL_SEND_RATE=30000;	//30 segs
     //TCP cliente
     public static final String REQUEST_LOGIN = "LOGIN";
     public static final String REQUEST_REGISTAR = "REGISTAR";
     //add outros requests necessarios NOTA add aqui e no cliente....
     
+
+    public static int PORT;
+    public static InetAddress IPSdirectoria;
+    public static int PortSdirectoria;
+    public static String Nome_serv;
     
-    public static int PORT = 6000;
     
-    private ServerSocket socket;
+    //heabeat
+    Timer manda_sinal_para_SD;
+    
+    private final ServerSocket socket;
     
     public ArrayList<cliente> lista_clientes = new ArrayList<>();
     
     
     public Servidor_tp() throws IOException
     {        
-        socket = new ServerSocket(PORT);
+        //socket = new ServerSocket(PORT);
+        socket = new ServerSocket(6000); //atribui port automatico
+        PORT = socket.getLocalPort();
         
         //adicionei 3 utilizadores pré-definidos (estas contas) estaram registadas em todos os servidores
         lista_clientes.add(new cliente("sergio","1234"));
@@ -226,11 +239,16 @@ public class Servidor_tp {
         if(socket == null){
             return;
         }
-        
+               
         System.out.println("Concurrent TCP Server iniciado no porto " + socket.getLocalPort() + " ...");
+       
+        //inicia heartbeat
+        manda_sinal_para_SD=new Timer();
+        manda_sinal_para_SD.scheduleAtFixedRate(new HeartbeatTask(), 0, SERVERSIGNAL_SEND_RATE);
         
         while(true){     
-            toClientSocket = socket.accept();  //espera por conecção      
+            toClientSocket = socket.accept();  //espera por conecção     
+            
             new AtendeCliente(toClientSocket,lista_clientes, threadId++).start(); // quando recebe um cliente cria uma tread dedicada para esse cliente            
         }
     }
@@ -241,15 +259,23 @@ public class Servidor_tp {
             System.out.println("Sintaxe: java TPCServer: nome ip_doSdirect port_doSdirect");
             return;
         }
-         String nome_mais_port = args[0].trim() + " " + PORT; // string com a informação toda separada por espaço
-        //validação do nome dados nos argumentos ao servidor
-        if ( !verifica_se_NomejaExiste(nome_mais_port,InetAddress.getByName(args[1]),Integer.parseInt(args[2]))){ // ! caso seja falso com o ! ele entra no if 
+         String nome = args[0].trim() ; // string com o nome do servidor
+   
+//validação do nome dados nos argumentos ao servidor
+        if ( !verifica_se_NomejaExiste(nome,InetAddress.getByName(args[1]),Integer.parseInt(args[2]))){ // ! caso seja falso com o ! ele entra no if 
        
-            Servidor_tp tcpServer = new Servidor_tp();      
+            Servidor_tp tcpServer = new Servidor_tp();   
+            
+            
+            PortSdirectoria = Integer.parseInt(args[2]);
+            IPSdirectoria = InetAddress.getByName(args[1]);
+            Nome_serv = nome;
+            
             tcpServer.processRequests(); 
             
-            //para atribuir port´s diferentes
-            PORT++;//penso que ao criar outro server o port sera diferente do criado anteriormente fazendo isto visto se static , mas não sei
+            
+           
+           
             System.out.println("[SERVIDOR] criado com sucesso!");
             
         }else{
@@ -308,5 +334,61 @@ public class Servidor_tp {
             return resposta;
     
     }
+    
+      public static void manda_info(String info_servidor, InetAddress serDirectoria_Addr,int serDirectoria_Port) throws IOException, ClassNotFoundException{
+             
+            DatagramSocket socket_udp;
+            ObjectOutputStream out;
+            ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(bOut);
+            ObjectInputStream in;
+            
+            
+             try {
+            socket_udp = new DatagramSocket();
+            socket_udp.setSoTimeout(TIMEOUT * 1000);
+            } catch (SocketException ex) {
+                System.out.println("Ocorreu um erro ao nivel do socket UDP:\n\t" + ex);
+                return ;
+            }      
+            
+            //envia pedido de validação ao UDP serviço de directoria
+            out.writeObject(REQUEST_ADDUPDATESERVIDOR);
+            out.flush();
+            
+            DatagramPacket packet_envio = new DatagramPacket(bOut.toByteArray(), bOut.size(),serDirectoria_Addr, serDirectoria_Port);
+            socket_udp.send(packet_envio); 
+            
+            //envia o nome que será validado
+            bOut = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(bOut);
+            
+            out.writeObject(info_servidor);
+            out.flush();
+            
+            packet_envio = new DatagramPacket(bOut.toByteArray(), bOut.size(),serDirectoria_Addr, serDirectoria_Port);
+            socket_udp.send(packet_envio); 
+    
+    }
+      
+      
+      /**
+	 * class directoria
+	 */
+	private class HeartbeatTask extends TimerTask {
+		
+		@Override
+		public void run() {
+			String info = Nome_serv+" "+ PORT;
+                    try {
+                        //pede para guardar
+                        manda_info(info,IPSdirectoria ,PortSdirectoria );
+                    } catch (IOException ex) {
+                        Logger.getLogger(Servidor_tp.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (ClassNotFoundException ex) {
+                        Logger.getLogger(Servidor_tp.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+		}
+	}
 }
 
