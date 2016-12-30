@@ -45,6 +45,12 @@ public class ClienteDados {
     
     public static final String REQUEST_LOGOUT = "LOGOUT";
     public static final String REQUEST_CAMINHO = "CAMINHO";
+    public static final String REQUEST_COPYFILE = "COPYFILE";
+    public static final String REQUEST_MOVEFILE = "MOVEFILE";
+    public static final String REQUEST_CHANGEWORKINGDIRECTORY = "CHANGEWORKINGDIRECTORY";
+    public static final String REQUEST_GETWORKINGDIRCONTENT = "GETWORKINGDIRCONTENT";
+    public static final String REQUEST_REMOVEFILE = "REMOVEFILE";
+    public static final String REQUEST_MAKEDIR = "MAKEDIR";
     //add outros requests necessarios NOTA add aqui e no servidor....
 
     Socket TCPserv_socket;
