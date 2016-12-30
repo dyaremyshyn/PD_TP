@@ -295,27 +295,7 @@ public class ClienteDados {
     }
 
 //parte COMANDOS
-    public boolean Criar_Copia(char ficheiro, char localizacao, String fich, String local) {  // r para remoto , l para local
-
-        if (ficheiro == 'r') { //ficheiro remoto
-            if (localizacao == 'r') {
-
-            } else if (localizacao == 'l') {
-
-            }
-
-        } else if (ficheiro == 'l') { //ficheiro local
-
-            if (localizacao == 'r') {
-
-            } else if (localizacao == 'l') {
-
-            }
-        }
-
-        return false; //caso nao entre em nenhum dos if's
-    }
-
+    
     public String Visualizar_caminho_DirActual() {
         String resposta ="";
         BufferedReader in;
@@ -348,6 +328,45 @@ public class ClienteDados {
 
         return resposta;
     }
+    
+    public void Mudar_Pasta_Trabalho(){
+        
+    }
+    
+    public void Ver_Conteudo_Pasta_Trabalho(){
+        
+    }
+    
+    public void Remover_Ficheiro(String s){
+        
+    }
+    
+    public void Criar_Pasta(String s){
+        
+    }
+    
+    public boolean Criar_Copia(char ficheiro, char localizacao, String fich, String local) {  // r para remoto , l para local
+
+        if (ficheiro == 'r') { //ficheiro remoto
+            if (localizacao == 'r') {
+
+            } else if (localizacao == 'l') {
+
+            }
+
+        } else if (ficheiro == 'l') { //ficheiro local
+
+            if (localizacao == 'r') {
+
+            } else if (localizacao == 'l') {
+
+            }
+        }
+
+        return false; //caso nao entre em nenhum dos if's
+    }
+
+    
 
     public String Visualizar_cont_ficheiro(String ficheiro) {
         String caminho = "";

@@ -63,8 +63,6 @@ class Pasta {
         return ficheiroJpg;
     }
     
-    
-    
 }
 
 
@@ -108,17 +106,7 @@ class AmbienteTrabalho extends Pasta {
     ArrayList<Pasta> getDir() {
         return dir;
     }
-    
-    /*boolean existePasta(String p){
-        for(int i=0;i<dir.size();i++) 
-            if(dir.get(i).getPasta().equals(p)) 
-                return true;
         
-        return false;
-    }
-    */
-    
-    
     boolean delPasta(String nomePasta){
         for(int i =0 ; i< dir.size();i++)
             if(dir.get(i).getPasta().equals(nomePasta))
