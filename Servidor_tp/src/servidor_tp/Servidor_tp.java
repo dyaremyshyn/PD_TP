@@ -265,7 +265,7 @@ public class Servidor_tp {
 
     public Servidor_tp() throws IOException {
         //socket = new ServerSocket(PORT);
-        socket = new ServerSocket(6000); //atribui port automatico
+        socket = new ServerSocket(0); //atribui port automatico
         PORT = socket.getLocalPort();
 
         //adicionei 3 utilizadores pré-definidos (estas contas) estaram registadas em todos os servidores
@@ -404,6 +404,45 @@ public class Servidor_tp {
         socket_udp.send(packet_envio);
 
     }
+    
+    public static void move_File(){
+    	
+        
+        InputStream inStream = null;
+	OutputStream outStream = null;
+
+    	try{
+
+    	    File afile =new File("C:\\folderA\\Afile.txt");
+    	    File bfile =new File("C:\\folderB\\Afile.txt");
+
+    	    inStream = new FileInputStream(afile);
+    	    outStream = new FileOutputStream(bfile);
+
+    	    byte[] buffer = new byte[1024];
+
+    	    int length;
+    	    //copy the file content in bytes
+    	    while ((length = inStream.read(buffer)) > 0){
+
+    	    	outStream.write(buffer, 0, length);
+
+    	    }
+
+    	    inStream.close();
+    	    outStream.close();
+
+    	    //delete the original file
+    	    afile.delete();
+
+    	    System.out.println("File is copied successful!");
+
+    	}catch(IOException e){
+    	    e.printStackTrace();
+    	} 
+    }
+    
+    
     
     /**
      * class directoria

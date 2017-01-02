@@ -20,6 +20,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,10 +35,13 @@ public class ClienteDados {
     public static final int MAX_SIZE = 1025;
     public static final String REQUEST_SERVIDORES = "LISTASERVIDOR";
     public static final String REQUEST_CLIENTES = "LISTACLIENTES";
+     public static final String REQUEST_ADDUPDATECLIENTE = "UPDATECLIENTELIST";
     public static final String REQUEST_MSG_GERAL = "MSG_GERAL"; //para um determinado grupo de utilizadores pertencentes ao mesmo servidor
     public static final String REQUEST_MSG_INDIVIDUAL = "MSG_INDIVIDUAL";
     public static final int TIMEOUT = 10; //segundos
-
+ public final static long CLIENTESIGNAL_SEND_RATE = 30000;	//30 segs
+    
+    
     ArrayList<String> lista_servidores;
 
     //TCP constantes
@@ -54,12 +59,15 @@ public class ClienteDados {
     //add outros requests necessarios NOTA add aqui e no servidor....
 
     Socket TCPserv_socket;
-
+//heabeat
+    Timer manda_sinal_para_SD;
     //variaveis de dados respectivos a dirtectoria UDP e vars para a partilha de dados
     InetAddress serDirectoria_Addr = null;
     int serDirectoria_Port = -1;
     DatagramSocket socket = null;
     DatagramPacket packet = null;
+    public static String NOME;
+    public static int PORT;
 
     //variaveis de dados respectivos ao servidor TCP e vars para a partilha de dados
     public ClienteDados() { //não sei se estara bem localizado a inicializaçao desta var no construtor , ...
@@ -118,10 +126,13 @@ public class ClienteDados {
             //estabelece ligação
             System.out.println("[LIGACAO]: " + nome_grupo + " ip:" + ip + " port:" + port + "\n");
 
-            TCPserv_socket = new Socket(ip, 6000);
+            TCPserv_socket = new Socket(ip, Integer.parseInt(port));
             TCPserv_socket.setSoTimeout(5000); //ms
             System.out.println("Connection established");
 
+            
+          
+       
             //add ao grupo multicast(nao sei se sera aqui ou no serviço directoria)
             return true;
         }
@@ -210,6 +221,13 @@ public class ClienteDados {
             resposta = in.readLine();
 
             if (resposta.equals("true")) {
+                
+                guarda_dados_nome_pass(nome);
+                
+                     //inicia heartbeat
+                   //inicia heartbeat
+                manda_sinal_para_SD = new Timer();
+                manda_sinal_para_SD.scheduleAtFixedRate(new HeartBeatTask(), 0, CLIENTESIGNAL_SEND_RATE);
                 return true;
             }
 
@@ -221,6 +239,11 @@ public class ClienteDados {
         return false;
     }
 
+    public void  guarda_dados_nome_pass(String nome){    
+        NOME = nome;
+        PORT = socket.getLocalPort();             
+    }
+    
     public boolean registar(String nome, String pass) {
 
         String nomeEpass = nome + " " + pass;
@@ -374,6 +397,74 @@ public class ClienteDados {
         return caminho;
     }
 
+    
+    
+        public static void manda_info(String info_cliente, InetAddress serDirectoria_Addr, int serDirectoria_Port) throws IOException, ClassNotFoundException {
+
+        DatagramSocket socket_udp;
+        ObjectOutputStream out;
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        out = new ObjectOutputStream(bOut);
+        ObjectInputStream in;
+
+        try {
+            socket_udp = new DatagramSocket();
+            socket_udp.setSoTimeout(TIMEOUT * 1000);
+        } catch (SocketException ex) {
+            System.out.println("Ocorreu um erro ao nivel do socket UDP:\n\t" + ex);
+            return;
+        }
+
+        //envia pedido de validação ao UDP serviço de directoria
+        out.writeObject(REQUEST_ADDUPDATECLIENTE);
+        out.flush();
+
+        DatagramPacket packet_envio = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        socket_udp.send(packet_envio);
+
+        //envia o nome que será validado
+        bOut = new ByteArrayOutputStream();
+        out = new ObjectOutputStream(bOut);
+
+        out.writeObject(info_cliente);
+        out.flush();
+
+        packet_envio = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        socket_udp.send(packet_envio);
+
+    }
+    
+       
+        
+     
+    public class HeartBeatTask extends TimerTask {
+     /**
+     * class directoria
+     */
+ 
+
+        @Override
+        public void run() {
+            String info = NOME + " " + PORT;
+            try {
+                //pede para guardar
+
+                
+                manda_info(info, serDirectoria_Addr, serDirectoria_Port);
+            } catch (IOException ex) {
+              
+            } catch (ClassNotFoundException ex) {
+               
+            }
+        }
+        
+    
+}
+    
+    
+    
+    
+    
     //implementar o resto...
 //    
 //    Criar uma cópia de um ficheiro (local ou remoto) numa nova localização (local ou remota);
@@ -384,4 +475,8 @@ public class ClienteDados {
 //• Visualizar o conteúdo de um ficheiro;
 //• Eliminar um ficheiro ou uma directoria vazia;
 //• Criar uma nova directoria.
+    
+    
+    
+    
 }

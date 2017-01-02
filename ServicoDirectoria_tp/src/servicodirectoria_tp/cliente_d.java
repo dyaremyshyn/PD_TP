@@ -12,15 +12,15 @@ package servicodirectoria_tp;
 public class cliente_d {
     
     private String IP;
-    private String port;
+    private int port;
     private String nome_servidor;
     private String nome_cliente;
     long lastHeartbeat;
 
-    public cliente_d(String IP, String port, String nome_servidor, String nome_cliente) {
-        this.IP = IP;
+    public cliente_d( String nome_cliente, int port ) {
+     //   this.IP = IP;
         this.port = port;
-        this.nome_servidor = nome_servidor;
+      //  this.nome_servidor = nome_servidor;
         this.nome_cliente = nome_cliente;
         
        updateHeartbeat();
@@ -34,11 +34,11 @@ public class cliente_d {
         this.IP = IP;
     }
 
-    public String getPort() {
+    public int getPort() {
         return port;
     }
 
-    public void setPort(String port) {
+    public void setPort(int port) {
         this.port = port;
     }
 
@@ -67,10 +67,12 @@ public class cliente_d {
 		return lastHeartbeat;
 	}
         
-        @Override
-	public String toString() {
-		return nome_cliente;
-	}
-    
+           
+    @Override
+    public String toString(){
+        String info = "";
+    info += nome_cliente + " " +  port;
+    return info;
+    }
     
 }

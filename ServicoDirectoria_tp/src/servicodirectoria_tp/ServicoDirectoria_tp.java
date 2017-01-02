@@ -46,16 +46,16 @@ public class ServicoDirectoria_tp {
     public static final String REQUEST_MSG_GERAL = "MSG_GERAL"; //para um determinado grupo de utilizadores pertencentes ao mesmo servidor
     public static final String REQUEST_MSG_INDIVIDUAL = "MSG_INDIVIDUAL";
     //heartbeat cliente
-    public final static long CLIENT_EXPIRE_TIME=5000;	//5000 milliseconds
-    public final static long CLIENT_CHECK_RATE=1000;	//1000 milliseconds
+    public final static long CLIENT_EXPIRE_TIME=40000;	//5000 milliseconds
+    public final static long CLIENT_CHECK_RATE=3000;	//1000 milliseconds
 
     //udp servidor
     public static final String REQUEST_VALIDACAONOME = "VALIDACAO";
     public static final String REQUEST_ADDUPDATESERVIDOR = "UPDATESERVERLIST"; //heartbeat
     
     //heartbeat servidor
-    public final static long SERVER_EXPIRE_TIME=50000;	//50000 milliseconds
-    public final static long SERVER_CHECK_RATE=2000;	//2000 milliseconds
+    public final static long SERVER_EXPIRE_TIME=40000;	//50000 milliseconds
+    public final static long SERVER_CHECK_RATE=3000;	//2000 milliseconds
 
     private DatagramSocket socket;
     private DatagramPacket packet; //para receber os pedidos e enviar as respostas
@@ -86,9 +86,10 @@ public class ServicoDirectoria_tp {
             serverListCheckerTimer=new Timer();
             serverListCheckerTimer.scheduleAtFixedRate(new verifica_lista_de_servidores(), 0, SERVER_CHECK_RATE);
           
-            //cliente
-         // clientListCheckerTimer.scheduleAtFixedRate(new ClientListChecker(), 0, Constants.Server.CLIENT_CHECK_RATE);
-        //clientListCheckerTimer=new Timer();
+            //cliente 
+            clientListCheckerTimer=new Timer();
+         clientListCheckerTimer.scheduleAtFixedRate(new verifica_lista_de_clientes(), 0, CLIENT_CHECK_RATE);
+        
       
     }
 
@@ -162,12 +163,16 @@ public class ServicoDirectoria_tp {
                        
                      String info = recebe_nomePortServer();
                      String[] info_serv = info.split(" ");
-                                         
+                                    
                        
                      ActualizaServer(info_serv[0], packet.getAddress().getHostAddress(), Integer.parseInt(info_serv[1]));
 
                 } else if (receivedMsg.equalsIgnoreCase(REQUEST_ADDUPDATECLIENTE)) {
-
+                     String info = recebe_nomePortCliente();
+                     String[] info_cli = info.split(" ");
+                                         
+                       
+                     ActualizaCliente(info_cli[0], Integer.parseInt(info_cli[1]));
                    
 
                 } else {
@@ -313,6 +318,22 @@ public class ServicoDirectoria_tp {
 
         return false;
     }
+    
+    public boolean verifica_cliente_repetido(String nome1, int port) {
+
+        for (int i = 0; i < lista_de_clientes_log.size(); i++) {
+            String info_servidor = lista_de_clientes_log.get(i).toString();
+            //queremos o nome que é a primeira string
+            String[] dados = info_servidor.split(" ");
+            //cria objeto                     
+            if (dados[0].equals(nome1) && Integer.parseInt(dados[1]) == port) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
 
     public void envia_lista_servidores() throws IOException {
         ByteArrayOutputStream bOut;
@@ -349,8 +370,41 @@ public class ServicoDirectoria_tp {
     
     //////////////////HHHHHHHHHHHHHHHHHHHHH   heartbeat HHHHHHHHHHHHHHHHHHHHHHHHHHH
     
+    public boolean ActualizaCliente(String cliNome, int cliPort) {
+	
+            System.out.println("[ACTUALIZA_CLI] Recebi nome:"+cliNome+" port: "+cliPort );
+            
+                        int encontrou = -1;
+                        
+                        for(int i=0;i<lista_de_clientes_log.size();i++){
+                            if(verifica_cliente_repetido(cliNome, cliPort)){
+                                encontrou = i;
+                                break;                             
+                            }
+                        }
+                        
+                        if(encontrou != -1)
+                        {
+                        if(lista_de_clientes_log.get(encontrou).getNome_cliente().equals(cliNome) && (lista_de_servidores.get(encontrou).getPort() == cliPort) ) 
+                        {	//if IP address matches
+				lista_de_clientes_log.get(encontrou).updateHeartbeat();
+				return true;
+			} else	//nickname already taken by some other client(checked using IP address)
+				return false;
+                        
+                        } else {	//caso seja novo servidor
+			lista_de_clientes_log.add(new cliente_d(cliNome, cliPort));
+			//System.out.println("Adicionei um novo cliente: "+ cliNome);
+	
+			return true;
+		}
+	}
+    
+    
+    
+    
    
-	public boolean ActualizaServer(String servNome, String servIP, int servPort) {
+	/*public boolean ActualizaServer(String servNome, String servIP, int servPort) {
 	
             System.out.println("[ACTUALIZA_SERV] Recebi nome:"+servNome+" IP: "+servIP+" port: "+servPort );
             
@@ -378,7 +432,67 @@ public class ServicoDirectoria_tp {
 	
 			return true;
 		}
-	}
+	}*/
+    
+    public boolean ActualizaServer(String servNome, String servIP, int servPort) {
+	
+            System.out.println("[ACTUALIZA_SERV] Recebi nome:"+servNome+" IP: "+servIP+" port: "+servPort );
+            
+                        int encontrou = -1;
+                        
+                        for(int i=0;i<lista_de_servidores.size();i++){
+                            if(verifica_servidor_repetido(servNome)){
+                                encontrou = i;
+                                break;                             
+                            }
+                        }
+                        
+                        if(encontrou != -1)
+                        {
+                        if(lista_de_servidores.get(encontrou).getIP().equals(servIP) && (lista_de_servidores.get(encontrou).getPort() == servPort) ) 
+                        {	//if IP address matches
+				lista_de_servidores.get(encontrou).updateHeartbeat();
+				return true;
+			} else	//nickname already taken by some other client(checked using IP address)
+				return false;
+                        
+                        } else {	//caso seja novo servidor
+			lista_de_servidores.add(new servidor(servNome, servIP, servPort));
+			//System.out.println("Adicionei um novo servidor: "+ servNome);
+	
+			return true;
+		}
+    
+    }
+    
+    public String recebe_nomePortCliente() throws IOException{
+    
+        
+    
+    String request="";
+        ObjectInputStream in;         
+       
+        
+        if (socket == null) {
+            return null;
+        }
+
+        socket.receive(packet);
+        in = new ObjectInputStream(new ByteArrayInputStream(packet.getData()));
+
+        try {
+            request = (String) (in.readObject()); //recebe uma string com o nome e o port
+
+          
+        } catch (ClassCastException | ClassNotFoundException e) {
+            System.out.println("Recebido objecto diferente de String "
+                    + packet.getAddress().getHostAddress() + ":" + packet.getPort());
+        
+        }
+    
+    
+    return request;
+    }
     
     public String recebe_nomePortServer() throws IOException{
     
@@ -415,10 +529,9 @@ public class ServicoDirectoria_tp {
 
         @Override
         public void run() {
-
+ 
             //	Iterator<Map.Entry<String, ClientDetails>> it=onlineClients.entrySet().iterator();
             long tempoActual = System.currentTimeMillis(); //obtem o tempo actual 
-
             for (int i = 0; i < lista_de_servidores.size(); i++) {
                 if (tempoActual - lista_de_servidores.get(i).getLastHeartbeat() > SERVER_EXPIRE_TIME) { //caso tenha passado o tempo ele elimina o server da lista
                     System.out.println(lista_de_servidores.get(i).getNome() + " timed out.");
