@@ -43,6 +43,7 @@ public class ClienteDados {
     
     
     ArrayList<String> lista_servidores;
+    ArrayList<String> lista_clientes;
 
     //TCP constantes
     public static final String REQUEST_LOGIN = "LOGIN";
@@ -66,13 +67,19 @@ public class ClienteDados {
     int serDirectoria_Port = -1;
     DatagramSocket socket = null;
     DatagramPacket packet = null;
-    public static String NOME;
-    public static int PORT;
+    public String NOME;
+    public int PORT;
+    public String NOME_SERV; 
 
     //variaveis de dados respectivos ao servidor TCP e vars para a partilha de dados
     public ClienteDados() { //não sei se estara bem localizado a inicializaçao desta var no construtor , ...
         lista_servidores = new ArrayList<>();
-
+        lista_clientes = new ArrayList<>();
+        
+        
+       new DiscoveryThread().start();  
+        
+        
         try {
             socket = new DatagramSocket();
             socket.setSoTimeout(TIMEOUT * 1000);
@@ -82,6 +89,38 @@ public class ClienteDados {
 
     }
 
+    
+    public void msg_geral(String msg) throws IOException, ClassNotFoundException{
+    
+     ObjectOutputStream out = null;
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        out = new ObjectOutputStream(bOut);
+
+
+        out.writeObject(REQUEST_MSG_GERAL);
+        out.flush();
+
+        packet = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        socket.send(packet); //envia pedido de lista
+
+ 
+
+        bOut = new ByteArrayOutputStream(MAX_SIZE);
+        out = new ObjectOutputStream(bOut);
+        
+        packet = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        //envia o numero de sevidores que o cliente vai receber
+        out.writeObject(msg);
+
+        packet.setData(bOut.toByteArray());
+        packet.setLength(bOut.size());
+        socket.send(packet);
+        
+
+        out.close();
+    }
+    
     //get's set's Sdirectoria
     public InetAddress getSerDirectoria_Addr() {
         return serDirectoria_Addr;
@@ -128,6 +167,9 @@ public class ClienteDados {
 
             TCPserv_socket = new Socket(ip, Integer.parseInt(port));
             TCPserv_socket.setSoTimeout(5000); //ms
+            
+            NOME_SERV  = nome_grupo;
+
             System.out.println("Connection established");
 
             
@@ -187,6 +229,53 @@ public class ClienteDados {
 
         return Lista;
     }
+    
+    public String pedido_lista_clientes() throws IOException, ClassNotFoundException {
+        ObjectOutputStream out = null;
+        String Lista = "lista: \n";
+
+        lista_clientes.clear();//limpa a lista 
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        out = new ObjectOutputStream(bOut);
+        ObjectInputStream in;
+
+        out.writeObject(REQUEST_CLIENTES);
+        out.flush();
+
+        packet = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        socket.send(packet); //envia pedido de lista
+
+        packet = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
+        socket.receive(packet);
+
+        in = new ObjectInputStream(new ByteArrayInputStream(packet.getData(), 0, packet.getLength()));
+
+        int n_clientes = (Integer) in.readObject();
+
+             //System.out.println("o numero de servidores e :"+ n_servidores+ "\n");
+        for (int i = 0; i < n_clientes; i++) {
+            packet = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
+            socket.receive(packet);
+
+            in = new ObjectInputStream(new ByteArrayInputStream(packet.getData(), 0, packet.getLength()));
+            String cliente = (String) in.readObject();
+
+            if (cliente != null) {
+                //System.out.println("info :"+ servidor);         
+                lista_clientes.add(cliente);
+            }
+        }
+
+        for (int i = 0; i < lista_clientes.size(); i++) {
+            Lista += i + ": " + lista_clientes.get(i) + "\n";
+        }
+
+        out.close();
+
+        return Lista;
+    }
+    
 
     //para TCP
     //parte LOGIN_REGISTAR
@@ -302,6 +391,8 @@ public class ClienteDados {
 
             System.out.println("[CLIENTE_login] enviei request");
 
+            //mandar dados do cliente a fazer logout
+            
             //recebe resposta
             resposta = in.readLine();
 
@@ -399,7 +490,7 @@ public class ClienteDados {
 
     
     
-        public static void manda_info(String info_cliente, InetAddress serDirectoria_Addr, int serDirectoria_Port) throws IOException, ClassNotFoundException {
+ public static void manda_info(String info_cliente, InetAddress serDirectoria_Addr, int serDirectoria_Port) throws IOException, ClassNotFoundException {
 
         DatagramSocket socket_udp;
         ObjectOutputStream out;
@@ -409,7 +500,7 @@ public class ClienteDados {
 
         try {
             socket_udp = new DatagramSocket();
-            socket_udp.setSoTimeout(TIMEOUT * 1000);
+            socket_udp.setSoTimeout(TIMEOUT * 2000);
         } catch (SocketException ex) {
             System.out.println("Ocorreu um erro ao nivel do socket UDP:\n\t" + ex);
             return;
@@ -433,10 +524,7 @@ public class ClienteDados {
         socket_udp.send(packet_envio);
 
     }
-    
-       
-        
-     
+ 
     public class HeartBeatTask extends TimerTask {
      /**
      * class directoria
@@ -445,7 +533,7 @@ public class ClienteDados {
 
         @Override
         public void run() {
-            String info = NOME + " " + PORT;
+            String info = NOME + " " + PORT + " "+ NOME_SERV;
             try {
                 //pede para guardar
 
@@ -462,8 +550,57 @@ public class ClienteDados {
 }
     
     
-    
-    
+public static class DiscoveryThread extends Thread {
+
+  DatagramSocket socket;
+
+  @Override
+  public void run() {
+    try {
+      //Keep a socket open to listen to all the UDP trafic that is destined for this port
+      socket = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
+      socket.setBroadcast(true);
+
+      while (true) {
+      //  System.out.println(getClass().getName() + ">>>Ready to receive broadcast packets!");
+
+        //Receive a packet
+        byte[] recvBuf = new byte[15000];
+        DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
+        socket.receive(packet);
+
+        //Packet received
+      //  System.out.println(getClass().getName() + ">>>Discovery packet received from: " + packet.getAddress().getHostAddress());
+      
+        System.out.println(">>>msg: " + new String(packet.getData()));
+
+        //See if the packet holds the right command (message)
+       /*  String message = new String(packet.getData()).trim();
+       if (message.equals("DISCOVER_FUIFSERVER_REQUEST")) {
+          byte[] sendData = "DISCOVER_FUIFSERVER_RESPONSE".getBytes();
+
+          //Send a response
+          DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, packet.getAddress(), packet.getPort());
+          socket.send(sendPacket);
+
+          System.out.println(getClass().getName() + ">>>Sent packet to: " + sendPacket.getAddress().getHostAddress());
+        }*/
+      }
+    } catch (IOException ex) {
+      Logger.getLogger(DiscoveryThread.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+/*
+  public static DiscoveryThread getInstance() {
+    return DiscoveryThreadHolder.INSTANCE;
+  }
+
+  private static class DiscoveryThreadHolder {
+
+    private static final DiscoveryThread INSTANCE = new DiscoveryThread();
+  }
+*/
+}
     
     //implementar o resto...
 //    

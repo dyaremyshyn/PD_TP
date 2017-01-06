@@ -14,8 +14,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -148,10 +152,12 @@ public class ServicoDirectoria_tp {
 
                 } else if (receivedMsg.equalsIgnoreCase(REQUEST_CLIENTES)) {
 
-                    //envia_lista_clientes();
+                    envia_lista_clientes();
                 } else if (receivedMsg.equalsIgnoreCase(REQUEST_MSG_GERAL)) {
 
-                    //continuar...
+                  String info = recebe_msg();
+                  new envia_msg_para_todos(info).start();
+                    
                 } else if (receivedMsg.equalsIgnoreCase(REQUEST_MSG_INDIVIDUAL)) {
 
                     //continuar...
@@ -171,8 +177,9 @@ public class ServicoDirectoria_tp {
                      String info = recebe_nomePortCliente();
                      String[] info_cli = info.split(" ");
                                          
-                       
-                     ActualizaCliente(info_cli[0], Integer.parseInt(info_cli[1]));
+                     
+                     
+                     ActualizaCliente(info_cli[0], Integer.parseInt(info_cli[1]), info_cli[2]);
                    
 
                 } else {
@@ -334,7 +341,6 @@ public class ServicoDirectoria_tp {
         return false;
     }
     
-
     public void envia_lista_servidores() throws IOException {
         ByteArrayOutputStream bOut;
         ObjectOutputStream out;
@@ -367,10 +373,42 @@ public class ServicoDirectoria_tp {
 
     }
 
+    public void envia_lista_clientes() throws IOException {
+        ByteArrayOutputStream bOut;
+        ObjectOutputStream out;
+
+        bOut = new ByteArrayOutputStream(MAX_SIZE);
+        out = new ObjectOutputStream(bOut);
+
+        //envia o numero de sevidores que o cliente vai receber
+        out.writeObject(lista_de_clientes_log.size());
+
+        packet.setData(bOut.toByteArray());
+        packet.setLength(bOut.size());
+        socket.send(packet);
+
+//O ip e porto de destino já se encontram definidos em packet
+        for (int i = 0; i < lista_de_clientes_log.size(); i++) {
+//envia os servidores 
+            bOut = new ByteArrayOutputStream(MAX_SIZE);
+            out = new ObjectOutputStream(bOut);
+
+            String info = lista_de_clientes_log.get(i).toString();
+            out.writeObject(info);
+            out.flush();
+
+            packet.setData(bOut.toByteArray());
+            packet.setLength(bOut.size());
+            socket.send(packet);
+        }
+        //System.out.println("Tamanho da resposta serializada:  "+bOut.size()+" bytes");
+
+    }
+    
     
     //////////////////HHHHHHHHHHHHHHHHHHHHH   heartbeat HHHHHHHHHHHHHHHHHHHHHHHHHHH
     
-    public boolean ActualizaCliente(String cliNome, int cliPort) {
+    public boolean ActualizaCliente(String cliNome, int cliPort, String nome_serv) {
 	
             System.out.println("[ACTUALIZA_CLI] Recebi nome:"+cliNome+" port: "+cliPort );
             
@@ -393,46 +431,12 @@ public class ServicoDirectoria_tp {
 				return false;
                         
                         } else {	//caso seja novo servidor
-			lista_de_clientes_log.add(new cliente_d(cliNome, cliPort));
+			lista_de_clientes_log.add(new cliente_d(cliNome, cliPort, nome_serv));
 			//System.out.println("Adicionei um novo cliente: "+ cliNome);
 	
 			return true;
 		}
 	}
-    
-    
-    
-    
-   
-	/*public boolean ActualizaServer(String servNome, String servIP, int servPort) {
-	
-            System.out.println("[ACTUALIZA_SERV] Recebi nome:"+servNome+" IP: "+servIP+" port: "+servPort );
-            
-                        int encontrou = -1;
-                        
-                        for(int i=0;i<lista_de_servidores.size();i++){
-                            if(verifica_servidor_repetido(lista_de_servidores.get(i).getNome())){
-                                encontrou = i;
-                                break;                             
-                            }
-                        }
-                        
-                        if(encontrou != -1)
-                        {
-                        if(lista_de_servidores.get(encontrou).getIP().equals(servIP) && (lista_de_servidores.get(encontrou).getPort() == servPort) ) 
-                        {	//if IP address matches
-				lista_de_servidores.get(encontrou).updateHeartbeat();
-				return true;
-			} else	//nickname already taken by some other client(checked using IP address)
-				return false;
-                        
-                        } else {	//caso seja novo servidor
-			lista_de_servidores.add(new servidor(servNome, servIP, servPort));
-			System.out.println("Adicionei um novo servidor: "+ servNome);
-	
-			return true;
-		}
-	}*/
     
     public boolean ActualizaServer(String servNome, String servIP, int servPort) {
 	
@@ -495,9 +499,7 @@ public class ServicoDirectoria_tp {
     }
     
     public String recebe_nomePortServer() throws IOException{
-    
-        
-    
+  
     String request="";
         ObjectInputStream in;         
        
@@ -515,15 +517,36 @@ public class ServicoDirectoria_tp {
           
         } catch (ClassCastException | ClassNotFoundException e) {
             System.out.println("Recebido objecto diferente de String "
-                    + packet.getAddress().getHostAddress() + ":" + packet.getPort());
-        
+                    + packet.getAddress().getHostAddress() + ":" + packet.getPort());       
         }
-    
-    
-    
+ 
     return request;
     }
     
+    public String recebe_msg() throws IOException{
+  
+    String request="";
+        ObjectInputStream in;         
+       
+        
+        if (socket == null) {
+            return null;
+        }
+
+        socket.receive(packet);
+        in = new ObjectInputStream(new ByteArrayInputStream(packet.getData()));
+
+        try {
+            request = (String) (in.readObject()); //recebe uma string com o nome e o port
+
+          
+        } catch (ClassCastException | ClassNotFoundException e) {
+            System.out.println("Recebido objecto diferente de String "
+                    + packet.getAddress().getHostAddress() + ":" + packet.getPort());       
+        }
+ 
+    return request;
+    }
         //verifica servidores online
     	private class verifica_lista_de_servidores extends TimerTask {
 
@@ -564,5 +587,90 @@ public class ServicoDirectoria_tp {
 
     }
     
+        
+public class envia_msg_para_todos extends Thread{
+
+    public DatagramSocket c;
+    public String msg;
     
+    envia_msg_para_todos(String msg){
+    
+        this.msg= msg;
+        
+    }
+    
+    
+    
+        @Override
+        public void run() {
+        
+            try {
+          //Open a random port to send the package
+          c = new DatagramSocket();
+          c.setBroadcast(true);
+
+          byte[] sendData = msg.getBytes();
+
+          //Try the 255.255.255.255 first
+          try {
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("255.255.255.255"), 8888);
+            c.send(sendPacket);
+            System.out.println(">>> pedido de msg geral abordado: 255.255.255.255 (DEFAULT)");
+          } catch (Exception e) {
+          }
+
+          
+         /* 
+          // Broadcast the message over all the network interfaces
+          Enumeration interfaces = NetworkInterface.getNetworkInterfaces();
+          while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = (NetworkInterface) interfaces.nextElement();
+
+            if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+              continue; // Don't want to broadcast to the loopback interface
+            }
+
+            for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+              InetAddress broadcast = interfaceAddress.getBroadcast();
+              if (broadcast == null) {
+                continue;
+              }
+
+              // Send the broadcast package!
+              try {
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, broadcast, 8888);
+                c.send(sendPacket);
+              } catch (Exception e) {
+              }
+
+              System.out.println(getClass().getName() + ">>> Request packet sent to: " + broadcast.getHostAddress() + "; Interface: " + networkInterface.getDisplayName());
+            }
+          }
+
+          System.out.println(getClass().getName() + ">>> Done looping over all network interfaces. Now waiting for a reply!");
+
+          //Wait for a response
+          byte[] recvBuf = new byte[15000];
+          DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
+          c.receive(receivePacket);
+
+          //We have a response
+          System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
+
+          //Check if the message is correct
+          String message = new String(receivePacket.getData()).trim();
+          if (message.equals("DISCOVER_FUIFSERVER_RESPONSE")) {
+            //DO SOMETHING WITH THE SERVER'S IP (for example, store it in your controller)
+          
+          }
+*/
+          //Close the port!
+          c.close();
+        } catch (IOException ex) {
+         
+        }
+ 
+        }
+
+}
 }

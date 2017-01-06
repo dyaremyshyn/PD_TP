@@ -92,7 +92,7 @@ public class TextuserInterface {
 
     }
 
-    public void iuComandos() {
+    public void iuComandos() throws IOException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
 
         while (true) {
@@ -102,13 +102,33 @@ public class TextuserInterface {
             System.out.print("-> comando: ");
             comando = sc.next();
 
-            if (comando.equals(" ")) {
+            if (comando.equals("lstclientes")) {
+
+                String lista = null;
+
+                lista = cliente.pedido_lista_clientes();
+
+                if (lista == null) {
+                    System.out.println("nenhum servidor encontrado\n");
+                } else {
+                    System.out.println(lista);
+                }
+
+            } else if (comando.equals("chatg")) {
+              
+                String msg = sc.nextLine();
+                
+                
+                cliente.msg_geral(msg);
+            } else if (comando.equals("...")) {
                 //...
             } else if (comando.equals("...")) {
                 //...
             } else {
                 System.out.println("## COMANDO invalido##");
             }
+            
+            
 
         }
     }

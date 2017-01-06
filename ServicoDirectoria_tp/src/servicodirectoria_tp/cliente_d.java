@@ -17,10 +17,10 @@ public class cliente_d {
     private String nome_cliente;
     long lastHeartbeat;
 
-    public cliente_d( String nome_cliente, int port ) {
+    public cliente_d( String nome_cliente, int port, String nome_servidor ) {
      //   this.IP = IP;
         this.port = port;
-      //  this.nome_servidor = nome_servidor;
+        this.nome_servidor = nome_servidor;
         this.nome_cliente = nome_cliente;
         
        updateHeartbeat();
@@ -71,7 +71,7 @@ public class cliente_d {
     @Override
     public String toString(){
         String info = "";
-    info += nome_cliente + " " +  port;
+    info += nome_cliente + " " +  port + " "+ nome_servidor;
     return info;
     }
     

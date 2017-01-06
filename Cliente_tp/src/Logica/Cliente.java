@@ -60,6 +60,14 @@ public class Cliente {
         return dados.pedido_lista_servidores();
     }
 
+    public String pedido_lista_clientes() throws IOException, ClassNotFoundException {
+        return dados.pedido_lista_clientes();
+    }
+
+    public void msg_geral(String msg) throws IOException, ClassNotFoundException {
+        dados.msg_geral(msg);
+    }
+
    
     
     
