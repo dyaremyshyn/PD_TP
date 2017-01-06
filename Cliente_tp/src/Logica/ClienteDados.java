@@ -389,23 +389,16 @@ public class ClienteDados {
             out.println(REQUEST_LOGOUT);
             out.flush();
 
-            System.out.println("[CLIENTE_login] enviei request");
+            System.out.println("[CLIENTE_logout] enviei request");
 
-            //mandar dados do cliente a fazer logout
-            
-            //recebe resposta
-            resposta = in.readLine();
-
-            if (resposta.equals("true")) {
-                return true;
-            }
+           
 
         } catch (IOException e) {
-            System.out.println(" Erro na comunicação como o cliente ");
+            System.out.println(" Erro na comunicação com o cliente ");
             return false;
         }
 
-        return false;
+        return true;
     }
 
 //parte COMANDOS

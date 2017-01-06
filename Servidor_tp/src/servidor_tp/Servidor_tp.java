@@ -35,13 +35,13 @@ class AtendeCliente extends Thread {
     @Override
     public void run() {
         String request, resposta;
-
+        boolean cli_on=true;
         BufferedReader in;
         PrintWriter out;
 
         try {
 
-            while (true) { //mudar para o request sair quebrar o while
+            while (cli_on) { //mudar para o request sair quebrar o while
 
                 out = new PrintWriter(socketToClient.getOutputStream());
                 in = new BufferedReader(new InputStreamReader(socketToClient.getInputStream()));
@@ -81,10 +81,13 @@ class AtendeCliente extends Thread {
                     //Envia a resposta ao cliente
                     out.println(registo_efectuado_com_sucesso(nomeEpass));
                     out.flush();
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_LOGOUT)) {
+                    System.out.println("[SERVIDOR] cliente fez logout");
+                    cli_on = false;
                 }
 
                 //FALTA ADICIONAR:
-                //  - LOGOUT
+                //  - LOGOUT(feito)
                 //  - CAMINHO DA PASTA ATUAL
                 //  - CONTEUDO DA PASTA ATUAL
                 

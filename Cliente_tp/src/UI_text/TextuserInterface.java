@@ -95,7 +95,6 @@ public class TextuserInterface {
     public void iuComandos() throws IOException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
 
-        while (true) {
             String comando = " ";
             System.out.print("\n\nHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n");
             System.out.println("\n\n=== Introduza Comandos ===\n");
@@ -120,6 +119,25 @@ public class TextuserInterface {
                 
                 
                 cliente.msg_geral(msg);
+            } else if (comando.equals("logout")) {
+              
+                
+                cliente.Logout();
+               
+            } else if (comando.equals("help")) {
+                 System.out.println("Comandos:\n"
+                         + "lstclientes-> lista clientes\n : (modo de uso) lstclientes"
+                         + "chatg-< envia mensagem para todos os clientes :(modo de uso) chatg msg"
+                         + "logout-> cliente faz logout do servidor : (modo de uso) logout"
+                         + ""
+                         + ""
+                         + ""
+                         + ""
+                         + "");
+            } else if (comando.equals("...")) {
+                //...
+            } else if (comando.equals("...")) {
+                //...
             } else if (comando.equals("...")) {
                 //...
             } else if (comando.equals("...")) {
@@ -130,7 +148,7 @@ public class TextuserInterface {
             
             
 
-        }
+        
     }
 
     public void corre() throws IOException, ClassNotFoundException {
