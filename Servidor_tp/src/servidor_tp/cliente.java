@@ -5,62 +5,63 @@
  */
 package servidor_tp;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
  *
- * @author Sergio
+ * @author Sergio & Dmytro
  */
 
 
 class Pasta {
 
-    String pastas;
-    ArrayList<String> ficheiroTxt;
-    ArrayList<String> ficheiroJpg;
+    String nomeFicheiro;
+    ArrayList<File> ficheiros; //tanto podem ser pastas como outro tipo de ficheiros 
 
-    Pasta(String nomePasta) {
-        pastas = nomePasta;
-        ficheiroTxt = new ArrayList<String>();
-        ficheiroJpg = new ArrayList<String>();
+    Pasta(String nomeFicheiro) {
+        this.nomeFicheiro = nomeFicheiro;
+        ficheiros = new ArrayList<File>();
     }
 
-    void setPasta(String s){pastas=s;}
-    String getPasta(){return pastas;}
+    void setPasta(String s){nomeFicheiro=s;}
+    String getPasta(){return nomeFicheiro;}
 
     boolean pastaVazia(){
-        if (ficheiroJpg.isEmpty() && ficheiroTxt.isEmpty())
+        if (ficheiros.isEmpty())
             return true;
         return false;
     }
     
-    void addFicheiroTxt(String t) {
-        ficheiroTxt.add(t);
+    void addFicheiro(File f) {
+        ficheiros.add(f);
     }
 
-    void addFciheiroJpg(String j) {
-        ficheiroJpg.add(j);
-    }
 
-    void delFTxt(String p){
-        for(int i = 0;i<ficheiroTxt.size();i++)
-            if(ficheiroTxt.get(i).equals(p)) 
-                ficheiroTxt.remove(i);
-        
+    void delFich(String p){
+        for(int i = 0;i<ficheiros.size();i++)
+            if(!ficheiros.get(i).isDirectory()){ 
+                
+                String[] par = ficheiros.get(i).getAbsolutePath().split("/");
+                if(par[par.length-1].equals(p))
+                    ficheiros.remove(i);
+                
+            }
     }
     
-    void delFJpg(String p){
-        for(int i = 0;i<ficheiroJpg.size();i++)
-            if(ficheiroJpg.get(i).equals(p)) 
-                ficheiroJpg.remove(i);
+    void delDir(String p){
+        for(int i = 0;i<ficheiros.size();i++)
+            if(ficheiros.get(i).isDirectory()){ 
+                
+                String[] par = ficheiros.get(i).getAbsolutePath().split("/");
+                if(par[par.length-1].equals(p))
+                    ficheiros.remove(i);
+                
+            }
     }
 
-    ArrayList<String> getFiceirosTxt() {
-        return ficheiroTxt;
-    }
-
-    ArrayList<String> getFicheirosJpg() {
-        return ficheiroJpg;
+    ArrayList<File> getFiceiros() {
+        return ficheiros;
     }
     
 }
@@ -69,26 +70,27 @@ class Pasta {
 
 class AmbienteTrabalho extends Pasta {
     ArrayList<Pasta> dir;
-    ArrayList<String> txt;
-    ArrayList<String> jpg;
-    
     Pasta pastaAtual;
     private String caminho;
 
-    public AmbienteTrabalho(String log_nome, String nomePasta) {
-        super(nomePasta);
+    public AmbienteTrabalho(String log_nome, String nomeFicheiro) {
+        super(nomeFicheiro);
         dir = new ArrayList<Pasta>();
-        txt = new ArrayList<String>();
-        jpg = new ArrayList<String>();
         
         pastaAtual = this;
-        caminho = "C:/Users/" + log_nome + "/" + nomePasta;
+        caminho = "C:/Users/" + log_nome + "/" + nomeFicheiro;
     }
     
-    public void setPastaAtual(Pasta p){pastaAtual=p;}
+    public void setPastaAtual(Pasta p){
+        pastaAtual=p;
+    }
     
-    Pasta listarConteudoPastaAtual(){
-        return pastaAtual;
+    String listarConteudoPastaAtual(){
+        String c="";
+        for(int i=0;i<dir.size();i++){
+            c = dir.get(i).getPasta()+"\n";
+        }
+        return c;
     }
     
     public String getCaminho() {
@@ -106,32 +108,7 @@ class AmbienteTrabalho extends Pasta {
     ArrayList<Pasta> getDir() {
         return dir;
     }
-        
-    boolean delPasta(String nomePasta){
-        for(int i =0 ; i< dir.size();i++)
-            if(dir.get(i).getPasta().equals(nomePasta))
-                if(dir.get(i).pastaVazia()){
-                    dir.remove(i);
-                    return true;
-                }
-        return false;
-    }
 
-    void apagaFicheiro(String s){
-        String terminacao="";
-        for(int i=0;i<s.length();i++)
-            if(s.charAt(i)== '.')
-                terminacao+=s.charAt(i);
-        
-        if(terminacao.equals(".txt"))
-            delFTxt(s);
-        
-        else if(terminacao.equals(".jpg"))
-            delFJpg(s);
-        
-        else if(terminacao.equals(".dir"))
-            delPasta(s);
-    }
 }
 
 public class cliente {
@@ -139,11 +116,13 @@ public class cliente {
     private String log_nome;
     private String password;
     AmbienteTrabalho desktop;
+    boolean loginEfetuado;
 
     public cliente(String log_nome, String password) {
         this.log_nome = log_nome;
         this.password = password;
         desktop = new AmbienteTrabalho(log_nome, "Desktop");
+        loginEfetuado=false;
     }
 
     public String getLog_nome() {
@@ -160,6 +139,23 @@ public class cliente {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+    public void setLoginEfetuado(boolean b) {
+        loginEfetuado = b;
+    }
+    public boolean getLoginEfetuado(){return loginEfetuado;}
+    
+    public AmbienteTrabalho getAmbienteTrabalho(){return desktop;}
+    
+    public boolean mudarPastaTrabalho(String nome){
+        for(int i=0;i<desktop.getDir().size();i++){
+            if(desktop.getDir().get(i).getPasta().equals(nome)){
+                desktop.setCaminho(desktop.getCaminho()+"/"+nome);
+                desktop.setPastaAtual(desktop.getDir().get(i));
+                return true;
+            }
+        }
+        return false;
     }
     
     
