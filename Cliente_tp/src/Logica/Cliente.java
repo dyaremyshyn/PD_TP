@@ -68,6 +68,10 @@ public class Cliente {
         dados.msg_geral(msg);
     }
 
+    public void msg_individual(String port, String msg) throws IOException, ClassNotFoundException {
+        dados.msg_individual(port, msg);
+    }
+
    
     
     

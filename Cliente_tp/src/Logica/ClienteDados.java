@@ -38,7 +38,7 @@ public class ClienteDados {
      public static final String REQUEST_ADDUPDATECLIENTE = "UPDATECLIENTELIST";
     public static final String REQUEST_MSG_GERAL = "MSG_GERAL"; //para um determinado grupo de utilizadores pertencentes ao mesmo servidor
     public static final String REQUEST_MSG_INDIVIDUAL = "MSG_INDIVIDUAL";
-    public static final int TIMEOUT = 10; //segundos
+    public static final int TIMEOUT = 20; //segundos
  public final static long CLIENTESIGNAL_SEND_RATE = 30000;	//30 segs
     
     
@@ -77,7 +77,7 @@ public class ClienteDados {
         lista_clientes = new ArrayList<>();
         
         
-       new DiscoveryThread().start();  
+      // new RecebeMensagem().start();  
         
         
         try {
@@ -106,6 +106,51 @@ public class ClienteDados {
 
  
 
+        bOut = new ByteArrayOutputStream(MAX_SIZE);
+        out = new ObjectOutputStream(bOut);
+        
+        packet = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        //envia o numero de sevidores que o cliente vai receber
+        out.writeObject(msg);
+
+        packet.setData(bOut.toByteArray());
+        packet.setLength(bOut.size());
+        socket.send(packet);
+        
+
+        out.close();
+    }
+    
+    public void msg_individual(String port, String msg) throws IOException, ClassNotFoundException{
+    
+     ObjectOutputStream out = null;
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        out = new ObjectOutputStream(bOut);
+
+
+        out.writeObject(REQUEST_MSG_INDIVIDUAL);
+        out.flush();
+
+        packet = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        socket.send(packet); //envia pedido de lista
+
+ 
+        //envia port
+        bOut = new ByteArrayOutputStream(MAX_SIZE);
+        out = new ObjectOutputStream(bOut);
+        
+        packet = new DatagramPacket(bOut.toByteArray(), bOut.size(), serDirectoria_Addr, serDirectoria_Port);
+        //envia o numero de sevidores que o cliente vai receber
+        out.writeObject(port);
+
+        packet.setData(bOut.toByteArray());
+        packet.setLength(bOut.size());
+        socket.send(packet);
+        
+        
+        
+//envia msg
         bOut = new ByteArrayOutputStream(MAX_SIZE);
         out = new ObjectOutputStream(bOut);
         
@@ -313,10 +358,15 @@ public class ClienteDados {
                 
                 guarda_dados_nome_pass(nome);
                 
+                new RecebeMensagem().start();  
                      //inicia heartbeat
                    //inicia heartbeat
                 manda_sinal_para_SD = new Timer();
                 manda_sinal_para_SD.scheduleAtFixedRate(new HeartBeatTask(), 0, CLIENTESIGNAL_SEND_RATE);
+                
+                //fica a escuta de msg's
+               
+                
                 return true;
             }
 
@@ -330,7 +380,7 @@ public class ClienteDados {
 
     public void  guarda_dados_nome_pass(String nome){    
         NOME = nome;
-        PORT = socket.getLocalPort();             
+      //  PORT = socket.getLocalPort();             
     }
     
     public boolean registar(String nome, String pass) {
@@ -543,7 +593,7 @@ public class ClienteDados {
 }
     
     
-public static class DiscoveryThread extends Thread {
+public class RecebeMensagem extends Thread {
 
   DatagramSocket socket;
 
@@ -551,9 +601,11 @@ public static class DiscoveryThread extends Thread {
   public void run() {
     try {
       //Keep a socket open to listen to all the UDP trafic that is destined for this port
-      socket = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
+ //     socket = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
+      socket = new DatagramSocket();
       socket.setBroadcast(true);
-
+      
+PORT = socket.getLocalPort();  
       while (true) {
       //  System.out.println(getClass().getName() + ">>>Ready to receive broadcast packets!");
 
@@ -580,7 +632,7 @@ public static class DiscoveryThread extends Thread {
         }*/
       }
     } catch (IOException ex) {
-      Logger.getLogger(DiscoveryThread.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(RecebeMensagem.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
 /*

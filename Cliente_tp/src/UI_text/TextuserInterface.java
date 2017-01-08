@@ -129,11 +129,16 @@ public class TextuserInterface {
                          + "lstclientes-> lista clientes\n : (modo de uso) lstclientes"
                          + "chatg-< envia mensagem para todos os clientes :(modo de uso) chatg msg"
                          + "logout-> cliente faz logout do servidor : (modo de uso) logout"
-                         + ""
+                         + "chati-> manda msg individual para o port x : (modo de uso) chati port msg"
                          + ""
                          + ""
                          + ""
                          + "");
+            }else if (comando.equals("chati")) {
+                String port =  sc.next();
+                String msg = sc.nextLine();               
+                 
+                 cliente.msg_individual(port,msg);
             } else if (comando.equals("...")) {
                 //...
             } else if (comando.equals("...")) {

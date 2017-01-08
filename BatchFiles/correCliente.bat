@@ -1,5 +1,4 @@
-cd..
-cd Cliente_tp/src/cliente_tp
-java Cliente_tp.java 192.168.1.65 5001
+cd ../mains
+java -jar  Cliente_tp.jar 192.168.1.65 5001
 pause 
 

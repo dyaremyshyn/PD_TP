@@ -15,11 +15,8 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -50,7 +47,7 @@ public class ServicoDirectoria_tp {
     public static final String REQUEST_MSG_GERAL = "MSG_GERAL"; //para um determinado grupo de utilizadores pertencentes ao mesmo servidor
     public static final String REQUEST_MSG_INDIVIDUAL = "MSG_INDIVIDUAL";
     //heartbeat cliente
-    public final static long CLIENT_EXPIRE_TIME=40000;	//5000 milliseconds
+    public final static long CLIENT_EXPIRE_TIME=50000;	//5000 milliseconds
     public final static long CLIENT_CHECK_RATE=3000;	//1000 milliseconds
 
     //udp servidor
@@ -58,7 +55,7 @@ public class ServicoDirectoria_tp {
     public static final String REQUEST_ADDUPDATESERVIDOR = "UPDATESERVERLIST"; //heartbeat
     
     //heartbeat servidor
-    public final static long SERVER_EXPIRE_TIME=40000;	//50000 milliseconds
+    public final static long SERVER_EXPIRE_TIME=50000;	//50000 milliseconds
     public final static long SERVER_CHECK_RATE=3000;	//2000 milliseconds
 
     private DatagramSocket socket;
@@ -160,7 +157,11 @@ public class ServicoDirectoria_tp {
                     
                 } else if (receivedMsg.equalsIgnoreCase(REQUEST_MSG_INDIVIDUAL)) {
 
-                    //continuar...
+                    //String portClienteAlvo = recebe_port_de_cli_alvo();
+                    String port = recebe_msg();
+                    String info = recebe_msg();
+                    envia_msg_individual(port, info);
+                    
                 } else if (receivedMsg.equalsIgnoreCase(REQUEST_VALIDACAONOME)) { //valida nome do servidor
 
                     envia_resposta_de_validacao();
@@ -588,6 +589,35 @@ public class ServicoDirectoria_tp {
     }
     
         
+        
+            
+public void envia_msg_individual( String port,String msg){
+  DatagramSocket c;
+
+    try {
+          //Open a random port to send the package
+          c = new DatagramSocket();
+          c.setBroadcast(true);
+
+          byte[] sendData = msg.getBytes();
+
+          //Try the 255.255.255.255 first
+          try {
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("255.255.255.255"), Integer.parseInt(port));
+            c.send(sendPacket);
+            System.out.println(">>> pedido de msg individual abordado: 255.255.255.255 (DEFAULT)");
+          } catch (Exception e) {
+          }
+
+           c.close();
+        } catch (IOException ex) {
+         
+        }
+ 
+        
+          
+}
+        
 public class envia_msg_para_todos extends Thread{
 
     public DatagramSocket c;
@@ -613,58 +643,14 @@ public class envia_msg_para_todos extends Thread{
 
           //Try the 255.255.255.255 first
           try {
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("255.255.255.255"), 8888);
+              for(int i = 0;i < lista_de_clientes_log.size();i++){
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("255.255.255.255"), lista_de_clientes_log.get(i).getPort());
             c.send(sendPacket);
+            }
             System.out.println(">>> pedido de msg geral abordado: 255.255.255.255 (DEFAULT)");
           } catch (Exception e) {
           }
 
-          
-         /* 
-          // Broadcast the message over all the network interfaces
-          Enumeration interfaces = NetworkInterface.getNetworkInterfaces();
-          while (interfaces.hasMoreElements()) {
-            NetworkInterface networkInterface = (NetworkInterface) interfaces.nextElement();
-
-            if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-              continue; // Don't want to broadcast to the loopback interface
-            }
-
-            for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-              InetAddress broadcast = interfaceAddress.getBroadcast();
-              if (broadcast == null) {
-                continue;
-              }
-
-              // Send the broadcast package!
-              try {
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, broadcast, 8888);
-                c.send(sendPacket);
-              } catch (Exception e) {
-              }
-
-              System.out.println(getClass().getName() + ">>> Request packet sent to: " + broadcast.getHostAddress() + "; Interface: " + networkInterface.getDisplayName());
-            }
-          }
-
-          System.out.println(getClass().getName() + ">>> Done looping over all network interfaces. Now waiting for a reply!");
-
-          //Wait for a response
-          byte[] recvBuf = new byte[15000];
-          DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-          c.receive(receivePacket);
-
-          //We have a response
-          System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
-
-          //Check if the message is correct
-          String message = new String(receivePacket.getData()).trim();
-          if (message.equals("DISCOVER_FUIFSERVER_RESPONSE")) {
-            //DO SOMETHING WITH THE SERVER'S IP (for example, store it in your controller)
-          
-          }
-*/
-          //Close the port!
           c.close();
         } catch (IOException ex) {
          
