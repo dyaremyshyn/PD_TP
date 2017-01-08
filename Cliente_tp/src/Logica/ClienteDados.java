@@ -1,4 +1,4 @@
-/*
+﻿/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Sergio
+ * @author Sergio & Dmytro
  */
 public class ClienteDados {
 
@@ -38,8 +38,9 @@ public class ClienteDados {
      public static final String REQUEST_ADDUPDATECLIENTE = "UPDATECLIENTELIST";
     public static final String REQUEST_MSG_GERAL = "MSG_GERAL"; //para um determinado grupo de utilizadores pertencentes ao mesmo servidor
     public static final String REQUEST_MSG_INDIVIDUAL = "MSG_INDIVIDUAL";
-    public static final int TIMEOUT = 20; //segundos
- public final static long CLIENTESIGNAL_SEND_RATE = 30000;	//30 segs
+    public static final int TIMEOUT = 10; //segundos
+    public final static long CLIENTESIGNAL_SEND_RATE = 30000;	//30 segs
+
     
     
     ArrayList<String> lista_servidores;
@@ -470,8 +471,6 @@ public class ClienteDados {
 
             System.out.println("[CLIENTE_registar] enviei request");
 
-             //System.out.println("[CLIENTE_registar] enviei info nome e pass"); 
-            //recebe resposta
             resposta = in.readLine();
 
             if (resposta!=null) {
@@ -494,12 +493,71 @@ public class ClienteDados {
         
     }
     
-    public void Remover_Ficheiro(String s){
+    public String Remover_Ficheiro(String s){
+        String resposta ="";
+        BufferedReader in;
+        PrintWriter out;
         
+        try {
+
+            System.out.println("[CLIENTE_registar] introduzi " + "removeFile");
+
+            out = new PrintWriter(TCPserv_socket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(TCPserv_socket.getInputStream()));
+
+            out.println(REQUEST_REMOVEFILE ); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+
+            System.out.println("[CLIENTE_registar] enviei request");
+
+            out.println("Nova Pasta" ); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+            
+            resposta = in.readLine();
+
+            if (resposta!=null) {
+                return resposta;
+            }
+
+        } catch (IOException e) {
+            System.out.println(" Erro na comunicação como o cliente ");
+            return null;
+        }
+        return resposta;
     }
     
-    public void Criar_Pasta(String s){
+    public String Criar_Pasta(String s){
+        String resposta ="";
+        BufferedReader in;
+        PrintWriter out;
         
+        try {
+
+            System.out.println("[CLIENTE_registar] introduzi " + "makeDir");
+
+            out = new PrintWriter(TCPserv_socket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(TCPserv_socket.getInputStream()));
+
+            out.println(REQUEST_MAKEDIR ); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+
+            System.out.println("[CLIENTE_registar] enviei request");
+
+            out.println("Nova Pasta" ); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+            
+            resposta = in.readLine();
+
+            if (resposta!=null) {
+                return resposta;
+            }
+
+        } catch (IOException e) {
+            System.out.println(" Erro na comunicação como o cliente ");
+            return null;
+        }
+
+        return resposta;
     }
     
     public boolean Criar_Copia(char ficheiro, char localizacao, String fich, String local) {  // r para remoto , l para local

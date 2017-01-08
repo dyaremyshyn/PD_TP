@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Sergio
+ * @author Sergio & Dmytro
  */
 class AtendeCliente extends Thread {
 
@@ -21,6 +21,8 @@ class AtendeCliente extends Thread {
     int myId;
     int fez_login;
     int idCliente;
+    
+    
     
     ArrayList<cliente> lista_cli;
 
@@ -35,6 +37,7 @@ class AtendeCliente extends Thread {
     @Override
     public void run() {
         String request, resposta;
+        String nomePasta;
         boolean cli_on=true;
         BufferedReader in;
         PrintWriter out;
@@ -71,6 +74,7 @@ class AtendeCliente extends Thread {
                     out.println(var);
                     out.flush();
 
+                    lista_cli.get(idCliente).setLoginEfetuado(var);
                     System.out.println("[SERVIDOR] login -> " + var);
                 } else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_REGISTAR)) {
                     System.out.println("[SERVIDOR] recebi um pedido de registo");
@@ -84,12 +88,50 @@ class AtendeCliente extends Thread {
                 }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_LOGOUT)) {
                     System.out.println("[SERVIDOR] cliente fez logout");
                     cli_on = false;
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_MAKEDIR)) {
+                    System.out.println("[SERVIDOR] recebi um pedido de makedir");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        nomePasta = in.readLine();
+                        out.println(criacao_de_pasta(nomePasta));
+                        out.flush();
+                    }else{
+                        out.println(false);
+                        out.flush();
+                    }
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_GETWORKINGDIRCONTENT)) {
+                    System.out.println("[SERVIDOR] recebi um pedido de conteudo da pasta");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        out.println(getConteudo());
+                        out.flush();
+                    }else{
+                        out.println(false);
+                        out.flush();
+                    }
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_REMOVEFILE)) {
+                    System.out.println("[SERVIDOR] recebi um pedido de remover pasta");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        nomePasta = in.readLine();
+                        deleteDir(nomePasta);
+                        out.println(true);
+                        out.flush();
+                    }
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_CHANGEWORKINGDIRECTORY)) {
+                    System.out.println("[SERVIDOR] recebi um pedido de conteudo da pasta");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        nomePasta = in.readLine();
+                        out.println(mudarPastaTra(nomePasta));
+                        out.flush();
+                    }else{
+                        out.println(false);
+                        out.flush();
+                    }
                 }
+                
+                
 
-                //FALTA ADICIONAR:
-                //  - LOGOUT(feito)
-                //  - CAMINHO DA PASTA ATUAL
-                //  - CONTEUDO DA PASTA ATUAL
+                //FALTA ADICIONAR:       
+                //  - "COPYFILE";
+                //  - "MOVEFILE";
                 
             }
 
@@ -104,7 +146,23 @@ class AtendeCliente extends Thread {
             }
         }
     }
+    
+    public boolean mudarPastaTra(String nome){
+        return lista_cli.get(idCliente).mudarPastaTrabalho(nome); 
+    }
+    public void deleteDir(String nomePasta){
+        lista_cli.get(idCliente).desktop.delFich(nomePasta);
+    }
+    
+    public String getConteudo(){
+        return lista_cli.get(idCliente).getAmbienteTrabalho().listarConteudoPastaAtual();
+    }
 
+    public boolean criacao_de_pasta(String nomePasta){
+        lista_cli.get(idCliente).getAmbienteTrabalho().addDir(new Pasta(nomePasta));
+        return true;
+    }
+    
     public boolean login_efectuado_com_sucesso(String nomeEpass) {
         String nome;
         String pass;
@@ -166,6 +224,7 @@ class AtendeCliente extends Thread {
         for (int i = 0; i < lista_cli.size(); i++) {
             if (lista_cli.get(i).getLog_nome().equals(c.getLog_nome())) {
                 if (lista_cli.get(i).getPassword().equals(c.getPassword())) {
+                    
                     return i; //caso nome e pass coencidam entao faz login com sucesso
                 }
             }
