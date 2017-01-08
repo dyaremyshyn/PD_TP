@@ -127,13 +127,15 @@ public class TextuserInterface {
             } else if (comando.equals("help")) {
                  System.out.println("Comandos:\n"
                          + "lstclientes-> lista clientes : (modo de uso) lstclientes\n"
-                         + "chatg-< envia mensagem para todos os clientes :(modo de uso) chatg msg\n"
+                         + "chatg-> envia mensagem para todos os clientes :(modo de uso) chatg msg\n"
                          + "logout-> cliente faz logout do servidor : (modo de uso) logout\n"
                          + "chati-> manda msg individual para o port x : (modo de uso) chati port msg\n"
-                         + ""
-                         + ""
-                         + ""
-                         + "");
+                         + "moveFile-> move ficherio de uma pasta para outra: (modo de uso) movefile nomePasta nomeFicheiro"  
+                         + "changeWorkingDirectory-> muda a pasta de trabalho: (modo de uso) changeWorkingDirectory nomePasta "
+                         + "getWorkingDirContent-> recebe o conteudo da pasta de trabalho: (modo de uso) getWorkingDirContent"
+                         + "getWorkingDirPath-> recebe o caminho da pasta de trabaalho: (modo de uso) getWorkingDirPath"
+                         + "removeFile-> remove um ficheiro: (modo de uso) removeFile nomePasta"
+                         + "makeDir-> Cria uma pasta e adiciona a pasta de trabalho: (modo de uso) makeDir nomePasta");
             }else if (comando.equals("chati")) {
                 String port =  sc.next();
                 String msg = sc.nextLine();               

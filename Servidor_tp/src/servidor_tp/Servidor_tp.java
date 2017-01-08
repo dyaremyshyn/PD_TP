@@ -125,7 +125,7 @@ class AtendeCliente extends Thread {
                         out.println(false);
                         out.flush();
                     }
-                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_COPYFILE)) {
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_MOVEFILE)) {
                     System.out.println("[SERVIDOR] recebi um pedido para copiar ficherio");
                     if(lista_cli.get(idCliente).getLoginEfetuado()){
                         nomePasta = in.readLine();
@@ -136,7 +136,7 @@ class AtendeCliente extends Thread {
                         out.println(false);
                         out.flush();
                     }
-                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_MOVEFILE)) {
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_COPYFILE)) {
                     System.out.println("[SERVIDOR] recebi um pedido para mover ficherio");
                     if(lista_cli.get(idCliente).getLoginEfetuado()){
                         nomePasta = in.readLine();
