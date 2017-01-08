@@ -126,10 +126,10 @@ public class TextuserInterface {
                
             } else if (comando.equals("help")) {
                  System.out.println("Comandos:\n"
-                         + "lstclientes-> lista clientes\n : (modo de uso) lstclientes"
-                         + "chatg-< envia mensagem para todos os clientes :(modo de uso) chatg msg"
-                         + "logout-> cliente faz logout do servidor : (modo de uso) logout"
-                         + "chati-> manda msg individual para o port x : (modo de uso) chati port msg"
+                         + "lstclientes-> lista clientes : (modo de uso) lstclientes\n"
+                         + "chatg-< envia mensagem para todos os clientes :(modo de uso) chatg msg\n"
+                         + "logout-> cliente faz logout do servidor : (modo de uso) logout\n"
+                         + "chati-> manda msg individual para o port x : (modo de uso) chati port msg\n"
                          + ""
                          + ""
                          + ""
