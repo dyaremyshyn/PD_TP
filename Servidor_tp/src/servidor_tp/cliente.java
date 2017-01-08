@@ -17,11 +17,11 @@ import java.util.ArrayList;
 class Pasta {
 
     String nomeFicheiro;
-    ArrayList<File> ficheiros; //tanto podem ser pastas como outro tipo de ficheiros 
+    ArrayList<Pasta> ficheiros; //tanto podem ser pastas como outro tipo de ficheiros 
 
     Pasta(String nomeFicheiro) {
         this.nomeFicheiro = nomeFicheiro;
-        ficheiros = new ArrayList<File>();
+        ficheiros = new ArrayList<Pasta>();
     }
 
     void setPasta(String s){nomeFicheiro=s;}
@@ -33,37 +33,14 @@ class Pasta {
         return false;
     }
     
-    void addFicheiro(File f) {
+    void addFicheiro(Pasta f) {
         ficheiros.add(f);
     }
 
-
-    void delFich(String p){
-        for(int i = 0;i<ficheiros.size();i++)
-            if(!ficheiros.get(i).isDirectory()){ 
-                
-                String[] par = ficheiros.get(i).getAbsolutePath().split("/");
-                if(par[par.length-1].equals(p))
-                    ficheiros.remove(i);
-                
-            }
-    }
-    
-    void delDir(String p){
-        for(int i = 0;i<ficheiros.size();i++)
-            if(ficheiros.get(i).isDirectory()){ 
-                
-                String[] par = ficheiros.get(i).getAbsolutePath().split("/");
-                if(par[par.length-1].equals(p))
-                    ficheiros.remove(i);
-                
-            }
-    }
-
-    ArrayList<File> getFiceiros() {
+    ArrayList<Pasta> getFiceiros() {
         return ficheiros;
     }
-    
+
 }
 
 
@@ -107,6 +84,42 @@ class AmbienteTrabalho extends Pasta {
 
     ArrayList<Pasta> getDir() {
         return dir;
+    }
+    
+    void delFich(String p){
+        for(int i = 0;i<dir.size();i++)
+            if(dir.get(i).getPasta().equals(p)){ 
+                dir.remove(i); 
+            }
+    }
+    
+    void delDir(String p){
+        for(int i = 0;i<dir.size();i++)
+            if(dir.get(i).getPasta().endsWith(".dir") && ficheiros.get(i).getPasta().equals(p)){ 
+                dir.remove(i);
+            }
+    }
+    
+    
+    boolean moverFicheiro(String nomeP, String nomeF ){
+        Pasta aux=null;
+        int index=-1;
+        for(int i =0;i < pastaAtual.getFiceiros().size();i++){
+            if(pastaAtual.getFiceiros().get(i).getPasta().equals(nomeF)){
+                aux = pastaAtual.getFiceiros().get(i);
+                pastaAtual.getFiceiros().remove(i);
+                index=i;
+            }
+        }
+        if(index!=-1){
+            for (int i =0;i<dir.size();i++){
+                if( dir.get(i).getPasta().equals(nomeP)){
+                    dir.get(i).addFicheiro(aux);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

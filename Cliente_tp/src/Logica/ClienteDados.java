@@ -54,6 +54,8 @@ public class ClienteDados {
     public static final String REQUEST_GETWORKINGDIRCONTENT = "GETWORKINGDIRCONTENT";
     public static final String REQUEST_REMOVEFILE = "REMOVEFILE";
     public static final String REQUEST_MAKEDIR = "MAKEDIR";
+    public static final String REQUEST_GETFILECONTENT="GETFILECONTENT";
+    
     //add outros requests necessarios NOTA add aqui e no servidor....
 
     Socket TCPserv_socket;
@@ -481,12 +483,67 @@ public class ClienteDados {
         return resposta;
     }
     
-    public void Mudar_Pasta_Trabalho(){
+    public String Mudar_Pasta_Trabalho(String s){
+        String resposta ="";
+        BufferedReader in;
+        PrintWriter out;
+        
+        try {
+
+            System.out.println("[CLIENTE_registar] introduzi " + "CAMINHO");
+
+            out = new PrintWriter(TCPserv_socket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(TCPserv_socket.getInputStream()));
+
+            out.println(REQUEST_CHANGEWORKINGDIRECTORY); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+
+            System.out.println("[CLIENTE_registar] enviei request");
+
+            resposta = in.readLine();
+
+            if (resposta!=null) {
+                return resposta;
+            }
+
+        } catch (IOException e) {
+            System.out.println(" Erro na comunicação como o cliente ");
+            return null;
+        }
+
+        return resposta;
         
     }
     
-    public void Ver_Conteudo_Pasta_Trabalho(){
+    public String Ver_Conteudo_Pasta_Trabalho(){
+        String resposta ="";
+        BufferedReader in;
+        PrintWriter out;
         
+        try {
+
+            System.out.println("[CLIENTE_registar] introduzi " + "CAMINHO");
+
+            out = new PrintWriter(TCPserv_socket.getOutputStream());
+            in = new BufferedReader(new InputStreamReader(TCPserv_socket.getInputStream()));
+
+            out.println(REQUEST_GETWORKINGDIRCONTENT); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.flush();
+
+            System.out.println("[CLIENTE_registar] enviei request");
+
+            resposta = in.readLine();
+
+            if (resposta!=null) {
+                return resposta;
+            }
+
+        } catch (IOException e) {
+            System.out.println(" Erro na comunicação como o cliente ");
+            return null;
+        }
+
+        return resposta;
     }
     
     public String Remover_Ficheiro(String s){
@@ -506,7 +563,7 @@ public class ClienteDados {
 
             System.out.println("[CLIENTE_registar] enviei request");
 
-            out.println("Nova Pasta" ); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.println(s); //faz o request ao servidor para que ele saiba o que vem aseguir
             out.flush();
             
             resposta = in.readLine();
@@ -539,7 +596,7 @@ public class ClienteDados {
 
             System.out.println("[CLIENTE_registar] enviei request");
 
-            out.println("Nova Pasta" ); //faz o request ao servidor para que ele saiba o que vem aseguir
+            out.println(s); //faz o request ao servidor para que ele saiba o que vem aseguir
             out.flush();
             
             resposta = in.readLine();

@@ -116,7 +116,7 @@ class AtendeCliente extends Thread {
                         out.flush();
                     }
                 }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_CHANGEWORKINGDIRECTORY)) {
-                    System.out.println("[SERVIDOR] recebi um pedido de conteudo da pasta");
+                    System.out.println("[SERVIDOR] recebi um pedido de mudar pasta de trabalho");
                     if(lista_cli.get(idCliente).getLoginEfetuado()){
                         nomePasta = in.readLine();
                         out.println(mudarPastaTra(nomePasta));
@@ -125,13 +125,41 @@ class AtendeCliente extends Thread {
                         out.println(false);
                         out.flush();
                     }
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_COPYFILE)) {
+                    System.out.println("[SERVIDOR] recebi um pedido para copiar ficherio");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        nomePasta = in.readLine();
+                        String nomeFich = in.readLine();
+                        out.println(mover_ficheiro(nomePasta,nomeFich));
+                        out.flush();
+                    }else{
+                        out.println(false);
+                        out.flush();
+                    }
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_MOVEFILE)) {
+                    System.out.println("[SERVIDOR] recebi um pedido para mover ficherio");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        nomePasta = in.readLine();
+                        out.println("não implementado");
+                        out.flush();
+                    }else{
+                        out.println(false);
+                        out.flush();
+                    }
+                }else if (request.equalsIgnoreCase(Servidor_tp.REQUEST_GETFILECONTENT)) {
+                    System.out.println("[SERVIDOR] recebi um pedido para mostrar conteudo do ficherio");
+                    if(lista_cli.get(idCliente).getLoginEfetuado()){
+                        nomePasta = in.readLine();
+                        out.println("não implementado");
+                        out.flush();
+                    }else{
+                        out.println(false);
+                        out.flush();
+                    }
                 }
-                
-                
 
                 //FALTA ADICIONAR:       
                 //  - "COPYFILE";
-                //  - "MOVEFILE";
                 
             }
 
@@ -147,11 +175,15 @@ class AtendeCliente extends Thread {
         }
     }
     
+    public boolean mover_ficheiro(String nomeP, String nomeF){
+        return lista_cli.get(idCliente).getAmbienteTrabalho().moverFicheiro(nomeP, nomeF);
+    }
+    
     public boolean mudarPastaTra(String nome){
         return lista_cli.get(idCliente).mudarPastaTrabalho(nome); 
     }
     public void deleteDir(String nomePasta){
-        lista_cli.get(idCliente).desktop.delFich(nomePasta);
+        lista_cli.get(idCliente).getAmbienteTrabalho().delDir(nomePasta);
     }
     
     public String getConteudo(){
@@ -311,6 +343,7 @@ public class Servidor_tp {
     public static final String REQUEST_GETWORKINGDIRCONTENT = "GETWORKINGDIRCONTENT";
     public static final String REQUEST_REMOVEFILE = "REMOVEFILE";
     public static final String REQUEST_MAKEDIR = "MAKEDIR";
+    public static final String REQUEST_GETFILECONTENT="GETFILECONTENT";
     //add outros requests necessarios NOTA add aqui e no cliente....
 
     public static int PORT;
